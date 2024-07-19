@@ -4,10 +4,20 @@
 // Defines the LCD's parameters: (rs, enable, d4, d5, d6, d7)
 LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
 
-// For water pump
-int enA = 9;  // Enable pin for motor driver (PWM pin)
-int in1 = 53;  // Control pin 1 pin 10
-int in2 = 52;  // Control pin 2  pin 8
+// For water pump 1 (Juice 1)
+int enA1 = 9;  // Enable pin for motor driver 1 (PWM pin)
+int in1_1 = 53;  // Control pin 1 for motor driver 1
+int in2_1 = 52;  // Control pin 2 for motor driver 1
+
+// For water pump 2 (Juice 2)
+int enA2 = 8;  // Enable pin for motor driver 2 (PWM pin)
+int in1_2 = 50;  // Control pin 1 for motor driver 2
+int in2_2 = 51;  // Control pin 2 for motor driver 2
+
+// For water pump 3 (Juice 3)
+int enA3 = 10;  // Enable pin for motor driver 3 (PWM pin)
+int in1_3 = 48;  // Control pin 1 for motor driver 3
+int in2_3 = 49;  // Control pin 2 for motor driver 3
 
 // Keypad setup
 const byte ROWS = 4; // four rows
@@ -25,25 +35,53 @@ byte colPins[COLS] = {23, 25, 27, 29}; // connect to the column pinouts of the k
 Keypad keypad = Keypad(makeKeymap(keys), rowPins, colPins, ROWS, COLS);
 
 // Flow sensor setup
-volatile int flow_frequency = 0; // Measures flow sensor pulses
+volatile int flow_frequency1 = 0; // Measures flow sensor 1 pulses
+volatile int flow_frequency2 = 0; // Measures flow sensor 2 pulses
+volatile int flow_frequency3 = 0; // Measures flow sensor 3 pulses
 unsigned int l_hour = 0; // Calculated litres/hour
 float totalMilliLitres = 0; // Total amount of water flowed through (mL)
-const int flowSensorPin = 11; // Digital pin 11
+
+// Flow sensor pins
+const int flowSensorPin1 = 11; // Digital pin 11 for flow sensor 1
+const int flowSensorPin2 = 12; // Digital pin 12 for flow sensor 2
+const int flowSensorPin3 = 13; // Digital pin 13 for flow sensor 3
 
 void setup() {
   delay(200);
   Serial.begin(9600);
 
-  pinMode(flowSensorPin, INPUT);
-  digitalWrite(flowSensorPin, HIGH);
+  pinMode(flowSensorPin1, INPUT);
+  digitalWrite(flowSensorPin1, HIGH);
 
-  // Initialize motor off
-  pinMode(in1, OUTPUT);
-  pinMode(in2, OUTPUT);
-  pinMode(enA, OUTPUT);
-  digitalWrite(in1, LOW);
-  digitalWrite(in2, LOW);
-  analogWrite(enA, 0);
+  pinMode(flowSensorPin2, INPUT);
+  digitalWrite(flowSensorPin2, HIGH);
+
+  pinMode(flowSensorPin3, INPUT);
+  digitalWrite(flowSensorPin3, HIGH);
+
+  // Initialize motor 1 off
+  pinMode(in1_1, OUTPUT);
+  pinMode(in2_1, OUTPUT);
+  pinMode(enA1, OUTPUT);
+  digitalWrite(in1_1, LOW);
+  digitalWrite(in2_1, LOW);
+  analogWrite(enA1, 0);
+
+  // Initialize motor 2 off
+  pinMode(in1_2, OUTPUT);
+  pinMode(in2_2, OUTPUT);
+  pinMode(enA2, OUTPUT);
+  digitalWrite(in1_2, LOW);
+  digitalWrite(in2_2, LOW);
+  analogWrite(enA2, 0);
+
+  // Initialize motor 3 off
+  pinMode(in1_3, OUTPUT);
+  pinMode(in2_3, OUTPUT);
+  pinMode(enA3, OUTPUT);
+  digitalWrite(in1_3, LOW);
+  digitalWrite(in2_3, LOW);
+  analogWrite(enA3, 0);
 
   Serial.println("Hello Board A2");
 
@@ -103,7 +141,6 @@ void loop() {
       lcd.print("1) Custom ml  2) 250ml");
     }
   }
-
 }
 
 void enterPercentages(unsigned int volume) {
@@ -133,9 +170,9 @@ void enterPercentages(unsigned int volume) {
   unsigned int volume2 = (volume * percentage2) / 100;
   unsigned int volume3 = (volume * percentage3) / 100;
 
-  fillVolume(volume1, "Juice 1");
-  fillVolume(volume2, "Juice 2");
-  fillVolume(volume3, "Juice 3");
+  fillVolume(volume1, "Juice 1", flowSensorPin1, in1_1, in2_1, enA1);
+  fillVolume(volume2, "Juice 2", flowSensorPin2, in1_2, in2_2, enA2);
+  fillVolume(volume3, "Juice 3", flowSensorPin3, in1_3, in2_3, enA3);
 }
 
 int enterPercentage() {
@@ -153,10 +190,10 @@ int enterPercentage() {
   return percentage;
 }
 
-void fillVolume(unsigned int volume, const char* juiceType) {
+void fillVolume(unsigned int volume, const char* juiceType, int flowSensorPin, int in1, int in2, int enA) {
   float liters = volume / 1000.0; // Convert milliliters to liters
 
-  flow_frequency = 0; // Reset the flow frequency count
+  int flow_frequency = 0; // Reset the flow frequency count
   totalMilliLitres = 0; // Reset total millilitres
   unsigned long startTime = millis();
 
@@ -175,7 +212,7 @@ void fillVolume(unsigned int volume, const char* juiceType) {
         flow_frequency++;
       }
       
-      l_hour = 45; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
+      l_hour = 44; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
       totalMilliLitres += (l_hour * 1000 / 3600); // Convert liters/hour to milliliters/second
 
       // Update and display current milliliters on LCD
