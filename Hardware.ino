@@ -55,7 +55,7 @@ void setup() {
   lcd.setCursor(0, 0);
   lcd.print("Glass size:");
   lcd.setCursor(0, 1);
-  lcd.print("1) Custom ml  2) 250ml");
+  lcd.print("1)330ml 2)250ml");
 }
 
 void loop() {
@@ -69,10 +69,17 @@ void loop() {
     lcd.clear();
     if (key == '1') {
       lcd.setCursor(0, 0);
-      lcd.print("Enter(ml):");
-      inputVolume = true;
-      volume = 0; // Reset to 0ml for custom input
-      digitCount = 0; // Reset digit count
+      lcd.print("Selected: 330ml");
+      volume = 330;
+      inputVolume = false;
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Selected: ");
+      lcd.print(volume);
+      lcd.print("ml");
+      
+      enterPercentages(volume);
+
     } else if (key == '2') {
       lcd.setCursor(0, 0);
       lcd.print("Selected: 250ml");
@@ -83,7 +90,8 @@ void loop() {
       lcd.print("Selected: ");
       lcd.print(volume);
       lcd.print("ml");
-      fillVolume(volume);
+      
+      enterPercentages(volume);
     } else {
       lcd.setCursor(0, 0);
       lcd.print("Invalid choice");
@@ -96,25 +104,56 @@ void loop() {
     }
   }
 
-  if (inputVolume) {
-    char key = keypad.getKey();
-    if (key >= '0' && key <= '9' && digitCount < 3) {
-      lcd.print(key);
-      volume = (volume * 10) + (key - '0'); // Accumulate digits
-      digitCount++;
-    } else if (key == 'D') {
-      lcd.clear();
-      lcd.setCursor(0, 0);
-      lcd.print("Selected: ");
-      lcd.print(volume);
-      lcd.print("ml");
-      inputVolume = false;
-      fillVolume(volume);
-    }
-  }
 }
 
-void fillVolume(unsigned int volume) {
+void enterPercentages(unsigned int volume) {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Enter % Ju1:");
+  int percentage1 = enterPercentage();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Enter % Ju2:");
+  int percentage2 = enterPercentage();
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Enter % Ju3:");
+  int percentage3 = enterPercentage();
+
+  int totalPercentage = percentage1 + percentage2 + percentage3;
+  if (totalPercentage != 100) {
+    lcd.clear();
+    lcd.setCursor(0, 0);
+    lcd.print("Invalid % sum");
+    delay(2000);
+    return;
+  }
+
+  unsigned int volume1 = (volume * percentage1) / 100;
+  unsigned int volume2 = (volume * percentage2) / 100;
+  unsigned int volume3 = (volume * percentage3) / 100;
+
+  fillVolume(volume1, "Juice 1");
+  fillVolume(volume2, "Juice 2");
+  fillVolume(volume3, "Juice 3");
+}
+
+int enterPercentage() {
+  int percentage = 0;
+  int digitCount = 0;
+  while (digitCount < 2) {
+    char key = keypad.getKey();
+    if (key >= '0' && key <= '9') {
+      percentage = percentage * 10 + (key - '0');
+      lcd.setCursor(digitCount, 1);
+      lcd.print(key);
+      digitCount++;
+    }
+  }
+  return percentage;
+}
+
+void fillVolume(unsigned int volume, const char* juiceType) {
   float liters = volume / 1000.0; // Convert milliliters to liters
 
   flow_frequency = 0; // Reset the flow frequency count
@@ -136,7 +175,7 @@ void fillVolume(unsigned int volume) {
         flow_frequency++;
       }
       
-      l_hour = 44; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
+      l_hour = 45; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
       totalMilliLitres += (l_hour * 1000 / 3600); // Convert liters/hour to milliliters/second
 
       // Update and display current milliliters on LCD
@@ -152,7 +191,8 @@ void fillVolume(unsigned int volume) {
   analogWrite(enA, 0);
 
   lcd.setCursor(0, 1);
-  lcd.print("Filling complete");
+  lcd.print(juiceType);
+  lcd.print(" complete");
   delay(2000);
 
   // Display final total milliliters flowed
