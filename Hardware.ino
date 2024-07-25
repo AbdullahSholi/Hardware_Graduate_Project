@@ -2,7 +2,8 @@
 #include <Keypad.h>
 
 // Defines the LCD's parameters: (rs, enable, d4, d5, d6, d7)
-LiquidCrystal lcd(2, 3, 4, 5, 6, 7);
+LiquidCrystal lcd(33, 32, 35, 34, 37, 36);
+
 
 // For water pump 1 (Juice 1)
 int enA1 = 9;  // Enable pin for motor driver 1 (PWM pin)
@@ -18,6 +19,13 @@ int in2_2 = 51;  // Control pin 2 for motor driver 2
 int enA3 = 10;  // Enable pin for motor driver 3 (PWM pin)
 int in1_3 = 48;  // Control pin 1 for motor driver 3
 int in2_3 = 49;  // Control pin 2 for motor driver 3
+
+// IR sensor setup
+const int irSensorPin = 31;  // IR sensor pin
+
+int sensorValue1 = 0;
+int flag = 0;
+int flag1 = 0;
 
 // Keypad setup
 const byte ROWS = 4; // four rows
@@ -46,6 +54,18 @@ const int flowSensorPin1 = 11; // Digital pin 11 for flow sensor 1
 const int flowSensorPin2 = 12; // Digital pin 12 for flow sensor 2
 const int flowSensorPin3 = 13; // Digital pin 13 for flow sensor 3
 
+// Additional DC motor setup for post-IR sensor detection
+int dcMotorEnablePin = 2; // Enable pin for DC motor
+int dcMotorInterruptPin1 = 46; // Interrupt pin 1 for DC motor
+int dcMotorInterruptPin2 = 47; // Interrupt pin 2 for DC motor
+
+
+// Additional DC motor setup for post-IR sensor detection
+int dcMotorEnablePinYellow = 4; // Enable pin for DC motor
+int dcMotorInterruptPinYellow1 = 38; // Interrupt pin 1 for DC motor
+int dcMotorInterruptPinYellow2 = 39; // Interrupt pin 2 for DC motor
+
+
 void setup() {
   delay(200);
   Serial.begin(9600);
@@ -58,6 +78,8 @@ void setup() {
 
   pinMode(flowSensorPin3, INPUT);
   digitalWrite(flowSensorPin3, HIGH);
+
+  pinMode(irSensorPin, INPUT);
 
   // Initialize motor 1 off
   pinMode(in1_1, OUTPUT);
@@ -82,6 +104,24 @@ void setup() {
   digitalWrite(in1_3, LOW);
   digitalWrite(in2_3, LOW);
   analogWrite(enA3, 0);
+
+  // Initialize additional DC motor off
+  pinMode(dcMotorEnablePin, OUTPUT);
+  pinMode(dcMotorInterruptPin1, OUTPUT);
+  pinMode(dcMotorInterruptPin2, OUTPUT);
+  digitalWrite(dcMotorInterruptPin1, LOW);
+  digitalWrite(dcMotorInterruptPin2, LOW);
+  analogWrite(dcMotorEnablePin, 255);
+
+  // Initialize additional DC motor off
+  pinMode(dcMotorEnablePinYellow, OUTPUT);
+  pinMode(dcMotorInterruptPinYellow1, OUTPUT);
+  pinMode(dcMotorInterruptPinYellow2, OUTPUT);
+  digitalWrite(dcMotorInterruptPinYellow1, LOW);
+  digitalWrite(dcMotorInterruptPinYellow2, LOW);
+  analogWrite(dcMotorEnablePinYellow, 0);
+
+
 
   Serial.println("Hello Board A2");
 
@@ -173,6 +213,13 @@ void enterPercentages(unsigned int volume) {
   fillVolume(volume1, "Juice 1", flowSensorPin1, in1_1, in2_1, enA1);
   fillVolume(volume2, "Juice 2", flowSensorPin2, in1_2, in2_2, enA2);
   fillVolume(volume3, "Juice 3", flowSensorPin3, in1_3, in2_3, enA3);
+
+  digitalWrite(dcMotorInterruptPin1, LOW);
+  digitalWrite(dcMotorInterruptPin2, LOW);
+  analogWrite(dcMotorEnablePin, 0);
+
+  // Start IR sensor detection after filling the last juice
+  startIrSensor();
 }
 
 int enterPercentage() {
@@ -239,3 +286,76 @@ void fillVolume(unsigned int volume, const char* juiceType, int flowSensorPin, i
   lcd.setCursor(0, 1);
   lcd.print(totalMilliLitres); // Display as milliliters
 }
+
+
+void startIrSensor() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Waiting for cup");
+  while(true){
+  sensorValue1 = digitalRead(irSensorPin);  // Read the sensor value (HIGH or LOW)
+    if(sensorValue1 == 0){
+      flag++;
+      if(flag1 == 0){
+      Serial.print("Sensor Value: ");
+      Serial.println(sensorValue1);  // Print the sensor value to the serial monitor
+      // delay(4000);  // Wait for half a second before the next reading
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Cup detected!");
+      digitalWrite(dcMotorInterruptPin1, LOW);
+      digitalWrite(dcMotorInterruptPin2, LOW);
+      analogWrite(dcMotorEnablePin, 0);
+
+      // delay(2000);
+      
+      digitalWrite(dcMotorInterruptPinYellow1, LOW);
+      digitalWrite(dcMotorInterruptPinYellow2, HIGH);
+      analogWrite(dcMotorEnablePinYellow, 170);
+      delay(20000);
+
+      // Here Servo Motor Code for mix
+
+
+      digitalWrite(dcMotorInterruptPinYellow1, HIGH);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 170);
+      delay(20000);
+      
+      digitalWrite(dcMotorInterruptPinYellow1, LOW);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 0);
+      flag1++;
+      }
+      
+      if(flag1 != 0){
+        Serial.println("Stop Motor");
+      }
+
+  } else{
+    if(flag == 0){
+      Serial.print("Sensor Value: ");
+      Serial.println(sensorValue1);  // Print the sensor value to the serial monitor
+      // delay(4000);  // Wait for half a second before the next reading
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Cup Not detected!");
+
+      // Turn on the DC motor
+      digitalWrite(dcMotorInterruptPin1, HIGH);
+      digitalWrite(dcMotorInterruptPin2, LOW);
+      analogWrite(dcMotorEnablePin, 255);  // Adjust the speed as needed (0-255)
+    }
+    
+  }
+  }
+
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Glass size:");
+  lcd.setCursor(0, 1);
+  lcd.print("1)330ml 2)250ml");
+}
+
+
