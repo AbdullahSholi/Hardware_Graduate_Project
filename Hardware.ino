@@ -1,5 +1,8 @@
 #include <LiquidCrystal.h>
 #include <Keypad.h>
+#include <Servo.h>
+
+Servo myservo;  // create servo object to control a servo
 
 // Defines the LCD's parameters: (rs, enable, d4, d5, d6, d7)
 LiquidCrystal lcd(33, 32, 35, 34, 37, 36);
@@ -69,6 +72,8 @@ int dcMotorInterruptPinYellow2 = 39; // Interrupt pin 2 for DC motor
 void setup() {
   delay(200);
   Serial.begin(9600);
+
+  myservo.attach(3);  // attaches the servo on pin 9 to the servo object
 
   pinMode(flowSensorPin1, INPUT);
   digitalWrite(flowSensorPin1, HIGH);
@@ -312,15 +317,29 @@ void startIrSensor() {
       digitalWrite(dcMotorInterruptPinYellow1, LOW);
       digitalWrite(dcMotorInterruptPinYellow2, HIGH);
       analogWrite(dcMotorEnablePinYellow, 170);
-      delay(20000);
+      delay(18000);
+
+      digitalWrite(dcMotorInterruptPinYellow1, LOW);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 0);
 
       // Here Servo Motor Code for mix
+      // Rotate the servo clockwise
+      for (int i = 0; i < 50; i++) {
+        myservo.write(0);  // rotate servo to 0 degrees
+        delay(500);   // wait for 100 milliseconds
+        myservo.write(180);  // rotate servo to 180 degrees
+        delay(500);    // wait for 100 milliseconds
+      }
+
+      // delay(10000);
+
 
 
       digitalWrite(dcMotorInterruptPinYellow1, HIGH);
       digitalWrite(dcMotorInterruptPinYellow2, LOW);
       analogWrite(dcMotorEnablePinYellow, 170);
-      delay(20000);
+      delay(18000);
       
       digitalWrite(dcMotorInterruptPinYellow1, LOW);
       digitalWrite(dcMotorInterruptPinYellow2, LOW);
