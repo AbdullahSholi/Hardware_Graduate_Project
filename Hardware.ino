@@ -25,10 +25,20 @@ int in2_3 = 49;  // Control pin 2 for motor driver 3
 
 // IR sensor setup
 const int irSensorPin = 31;  // IR sensor pin
+const int irSensorPin1 = 41;  // IR sensor pin
+const int irSensorPin2 = 40;  // IR sensor pin
 
 int sensorValue1 = 0;
+int sensorValue2 = 0;
+int sensorValue3 = 0;
 int flag = 0;
 int flag1 = 0;
+
+int flagA = 0;
+int flagA1 = 0;
+
+int flagB = 0;
+int flagB1 = 0;
 
 // Keypad setup
 const byte ROWS = 4; // four rows
@@ -58,15 +68,15 @@ const int flowSensorPin2 = 12; // Digital pin 12 for flow sensor 2
 const int flowSensorPin3 = 13; // Digital pin 13 for flow sensor 3
 
 // Additional DC motor setup for post-IR sensor detection
-int dcMotorEnablePin = 2; // Enable pin for DC motor
-int dcMotorInterruptPin1 = 46; // Interrupt pin 1 for DC motor
-int dcMotorInterruptPin2 = 47; // Interrupt pin 2 for DC motor
+int dcMotorEnablePin = 4; // Enable pin for DC motor
+int dcMotorInterruptPin1 = 38; // Interrupt pin 1 for DC motor
+int dcMotorInterruptPin2 = 39; // Interrupt pin 2 for DC motor
 
 
 // Additional DC motor setup for post-IR sensor detection
-int dcMotorEnablePinYellow = 4; // Enable pin for DC motor
-int dcMotorInterruptPinYellow1 = 38; // Interrupt pin 1 for DC motor
-int dcMotorInterruptPinYellow2 = 39; // Interrupt pin 2 for DC motor
+int dcMotorEnablePinYellow = 2; // Enable pin for DC motor
+int dcMotorInterruptPinYellow1 = 46; // Interrupt pin 1 for DC motor
+int dcMotorInterruptPinYellow2 = 47; // Interrupt pin 2 for DC motor
 
 
 void setup() {
@@ -85,6 +95,8 @@ void setup() {
   digitalWrite(flowSensorPin3, HIGH);
 
   pinMode(irSensorPin, INPUT);
+  pinMode(irSensorPin1, INPUT);
+  pinMode(irSensorPin2, INPUT);
 
   // Initialize motor 1 off
   pinMode(in1_1, OUTPUT);
@@ -214,7 +226,7 @@ void enterPercentages(unsigned int volume) {
   unsigned int volume1 = (volume * percentage1) / 100;
   unsigned int volume2 = (volume * percentage2) / 100;
   unsigned int volume3 = (volume * percentage3) / 100;
-
+  
   fillVolume(volume1, "Juice 1", flowSensorPin1, in1_1, in2_1, enA1);
   fillVolume(volume2, "Juice 2", flowSensorPin2, in1_2, in2_2, enA2);
   fillVolume(volume3, "Juice 3", flowSensorPin3, in1_3, in2_3, enA3);
@@ -225,6 +237,21 @@ void enterPercentages(unsigned int volume) {
 
   // Start IR sensor detection after filling the last juice
   startIrSensor();
+  startIrSensor2();
+  startIrSensor1();
+  
+
+  
+  Serial.println("---------------------------");
+  Serial.print("Sensor 2 Value: ");
+  Serial.println(sensorValue2);
+  Serial.print("Sensor 3 Value: ");
+  Serial.println(sensorValue3);
+  Serial.println("---------------------------");
+
+
+
+
 }
 
 int enterPercentage() {
@@ -252,7 +279,7 @@ void fillVolume(unsigned int volume, const char* juiceType, int flowSensorPin, i
   // Turn on the pump
   digitalWrite(in1, HIGH);
   digitalWrite(in2, LOW);
-  analogWrite(enA, 255);  // Adjust the speed as needed (0-255)
+  analogWrite(enA, 130);  // Adjust the speed as needed (0-255)
 
   // Calculate the volume of water
   while (totalMilliLitres < volume) {
@@ -264,7 +291,7 @@ void fillVolume(unsigned int volume, const char* juiceType, int flowSensorPin, i
         flow_frequency++;
       }
       
-      l_hour = 44; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
+      l_hour = 40; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
       totalMilliLitres += (l_hour * 1000 / 3600); // Convert liters/hour to milliliters/second
 
       // Update and display current milliliters on LCD
@@ -299,8 +326,10 @@ void startIrSensor() {
   lcd.print("Waiting for cup");
   while(true){
   sensorValue1 = digitalRead(irSensorPin);  // Read the sensor value (HIGH or LOW)
+  
     if(sensorValue1 == 0){
       flag++;
+      
       if(flag1 == 0){
       Serial.print("Sensor Value: ");
       Serial.println(sensorValue1);  // Print the sensor value to the serial monitor
@@ -312,43 +341,27 @@ void startIrSensor() {
       digitalWrite(dcMotorInterruptPin2, LOW);
       analogWrite(dcMotorEnablePin, 0);
 
-      // delay(2000);
+      delay(5000);
       
-      digitalWrite(dcMotorInterruptPinYellow1, LOW);
-      digitalWrite(dcMotorInterruptPinYellow2, HIGH);
-      analogWrite(dcMotorEnablePinYellow, 170);
-      delay(18000);
 
-      digitalWrite(dcMotorInterruptPinYellow1, LOW);
-      digitalWrite(dcMotorInterruptPinYellow2, LOW);
-      analogWrite(dcMotorEnablePinYellow, 0);
-
-      // Here Servo Motor Code for mix
-      // Rotate the servo clockwise
-      for (int i = 0; i < 50; i++) {
-        myservo.write(0);  // rotate servo to 0 degrees
-        delay(500);   // wait for 100 milliseconds
-        myservo.write(180);  // rotate servo to 180 degrees
-        delay(500);    // wait for 100 milliseconds
-      }
-
-      // delay(10000);
-
-
-
+      // Here The code of Molinix
+      //////////////////////////////////////////////////
       digitalWrite(dcMotorInterruptPinYellow1, HIGH);
       digitalWrite(dcMotorInterruptPinYellow2, LOW);
       analogWrite(dcMotorEnablePinYellow, 170);
-      delay(18000);
-      
-      digitalWrite(dcMotorInterruptPinYellow1, LOW);
-      digitalWrite(dcMotorInterruptPinYellow2, LOW);
-      analogWrite(dcMotorEnablePinYellow, 0);
+
       flag1++;
+      Serial.print("flag: ");
+      Serial.println(flag);
+      Serial.print("flag1: ");
+      Serial.println(flag1);
+      //////////////////////////////////////////////////////
       }
       
       if(flag1 != 0){
-        Serial.println("Stop Motor");
+        Serial.println("Hello!!!!!!!!!");
+        break;
+        
       }
 
   } else{
@@ -364,17 +377,160 @@ void startIrSensor() {
       digitalWrite(dcMotorInterruptPin1, HIGH);
       digitalWrite(dcMotorInterruptPin2, LOW);
       analogWrite(dcMotorEnablePin, 255);  // Adjust the speed as needed (0-255)
-    }
+
+  
+    } 
     
   }
-  }
-
 
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Glass size:");
   lcd.setCursor(0, 1);
   lcd.print("1)330ml 2)250ml");
+}
+}
+
+void startIrSensor2() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Waiting for cup");
+  while(true){
+  sensorValue3 = digitalRead(irSensorPin2);  // Read the sensor value (HIGH or LOW)
+  
+    if(sensorValue3 == 0){
+      flagB++;
+      
+      if(flagB1 == 0){
+      Serial.print("Sensor Value 3 : ");
+      Serial.println(sensorValue3);  // Print the sensor value to the serial monitor
+      // delay(4000);  // Wait for half a second before the next reading
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Cup detected!");
+      digitalWrite(dcMotorInterruptPin1, LOW);
+      digitalWrite(dcMotorInterruptPin2, LOW);
+      analogWrite(dcMotorEnablePin, 0);
+
+      delay(5000);
+      
+
+      // Here The code of Molinix
+      //////////////////////////////////////////////////
+      digitalWrite(dcMotorInterruptPinYellow1, HIGH);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 170);
+
+      flagB1++;
+      Serial.print("flagB: ");
+      Serial.println(flagB);
+      Serial.print("flagB1: ");
+      Serial.println(flagB1);
+      //////////////////////////////////////////////////////
+      }
+      
+      if(flagB1 != 0){
+        Serial.println("Hello!!!!!!!!!");
+        break;
+        
+      }
+
+  } else{
+    if(flagB == 0){
+      Serial.print("Sensor Value 3: ");
+      Serial.println(sensorValue3);  // Print the sensor value to the serial monitor
+      // delay(4000);  // Wait for half a second before the next reading
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Cup Not detected!");
+
+      // Turn on the DC motor
+      digitalWrite(dcMotorInterruptPin1, HIGH);
+      digitalWrite(dcMotorInterruptPin2, LOW);
+      analogWrite(dcMotorEnablePin, 255);  // Adjust the speed as needed (0-255)
+
+  
+    } 
+    
+  }
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Glass size:");
+  lcd.setCursor(0, 1);
+  lcd.print("1)330ml 2)250ml");
+}
+}
+
+void startIrSensor1() {
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Waiting for cup");
+  while(true){
+  sensorValue2 = digitalRead(irSensorPin1);  // Read the sensor value (HIGH or LOW)
+  
+    if(sensorValue2 == 0){
+      flagA++;
+      
+      if(flagA1 == 0){
+      Serial.print("Sensor Value 2 : ");
+      Serial.println(sensorValue2);  // Print the sensor value to the serial monitor
+      // delay(4000);  // Wait for half a second before the next reading
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Cup detected!");
+      digitalWrite(dcMotorInterruptPin1, LOW);
+      digitalWrite(dcMotorInterruptPin2, LOW);
+      analogWrite(dcMotorEnablePin, 0);
+
+      delay(5000);
+      
+
+      // Here The code of Molinix
+      //////////////////////////////////////////////////
+      digitalWrite(dcMotorInterruptPinYellow1, HIGH);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 170);
+
+      flagA1++;
+      Serial.print("flagA: ");
+      Serial.println(flagA);
+      Serial.print("flagA1: ");
+      Serial.println(flagA1);
+      //////////////////////////////////////////////////////
+      }
+      
+      if(flagA1 != 0){
+        Serial.println("Hello!!!!!!!!!");
+        break;
+        
+      }
+
+  } else{
+    if(flagA == 0){
+      Serial.print("Sensor Value 2: ");
+      Serial.println(sensorValue2);  // Print the sensor value to the serial monitor
+      // delay(4000);  // Wait for half a second before the next reading
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Cup Not detected!");
+
+      // Turn on the DC motor
+      digitalWrite(dcMotorInterruptPin1, HIGH);
+      digitalWrite(dcMotorInterruptPin2, LOW);
+      analogWrite(dcMotorEnablePin, 255);  // Adjust the speed as needed (0-255)
+
+  
+    } 
+    
+  }
+
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Glass size:");
+  lcd.setCursor(0, 1);
+  lcd.print("1)330ml 2)250ml");
+}
 }
 
 
