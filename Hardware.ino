@@ -23,6 +23,17 @@ int enA3 = 10;  // Enable pin for motor driver 3 (PWM pin)
 int in1_3 = 48;  // Control pin 1 for motor driver 3
 int in2_3 = 49;  // Control pin 2 for motor driver 3
 
+
+// For water pump 3 (Juice 3)
+int enA4 = 5;  // Enable pin for motor driver 3 (PWM pin)
+int in1_4 = 42;  // Control pin 1 for motor driver 3
+int in2_4 = 43;  // Control pin 2 for motor driver 3
+
+// For water pump 3 (Juice 3)
+int enA5 = 6;  // Enable pin for motor driver 3 (PWM pin)
+int in1_5 = 44;  // Control pin 1 for motor driver 3
+int in2_5 = 45;  // Control pin 2 for motor driver 3
+
 // IR sensor setup
 const int irSensorPin = 31;  // IR sensor pin
 const int irSensorPin1 = 41;  // IR sensor pin
@@ -121,6 +132,22 @@ void setup() {
   digitalWrite(in1_3, LOW);
   digitalWrite(in2_3, LOW);
   analogWrite(enA3, 0);
+
+  // Initialize motor 3 off
+  pinMode(in1_4, OUTPUT);
+  pinMode(in2_4, OUTPUT);
+  pinMode(enA4, OUTPUT);
+  digitalWrite(in1_4, LOW);
+  digitalWrite(in2_4, LOW);
+  analogWrite(enA4, 255);
+
+   // Initialize motor 3 off
+  pinMode(in1_5, OUTPUT);
+  pinMode(in2_5, OUTPUT);
+  pinMode(enA5, OUTPUT);
+  digitalWrite(in1_5, LOW);
+  digitalWrite(in2_5, LOW);
+  analogWrite(enA5, 0);
 
   // Initialize additional DC motor off
   pinMode(dcMotorEnablePin, OUTPUT);
@@ -235,10 +262,11 @@ void enterPercentages(unsigned int volume) {
   digitalWrite(dcMotorInterruptPin2, LOW);
   analogWrite(dcMotorEnablePin, 0);
 
+
   // Start IR sensor detection after filling the last juice
   startIrSensor();
   startIrSensor2();
-  startIrSensor1();
+  startIrSensor1(volume);
   
 
   
@@ -350,6 +378,11 @@ void startIrSensor() {
       digitalWrite(dcMotorInterruptPinYellow2, LOW);
       analogWrite(dcMotorEnablePinYellow, 170);
 
+      delay(5000);
+      digitalWrite(dcMotorInterruptPinYellow1, LOW);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 0);
+
       flag1++;
       Serial.print("flag: ");
       Serial.println(flag);
@@ -413,13 +446,25 @@ void startIrSensor2() {
       analogWrite(dcMotorEnablePin, 0);
 
       delay(5000);
+
+      digitalWrite(in1_5, HIGH);
+      digitalWrite(in2_5, LOW);
+      analogWrite(enA5, 150);
+
+      delay(10000);
+
+      digitalWrite(in1_5, LOW);
+      digitalWrite(in2_5, LOW);
+      analogWrite(enA5, 0);
+
+
       
 
       // Here The code of Molinix
       //////////////////////////////////////////////////
-      digitalWrite(dcMotorInterruptPinYellow1, HIGH);
-      digitalWrite(dcMotorInterruptPinYellow2, LOW);
-      analogWrite(dcMotorEnablePinYellow, 170);
+      // digitalWrite(dcMotorInterruptPinYellow1, HIGH);
+      // digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      // analogWrite(dcMotorEnablePinYellow, 170);
 
       flagB1++;
       Serial.print("flagB: ");
@@ -462,7 +507,7 @@ void startIrSensor2() {
 }
 }
 
-void startIrSensor1() {
+void startIrSensor1(unsigned int volume) {
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Waiting for cup");
@@ -473,7 +518,8 @@ void startIrSensor1() {
       flagA++;
       
       if(flagA1 == 0){
-      Serial.print("Sensor Value 2 : ");
+        if(volume == 250){
+          Serial.print("Sensor Value 2 : ");
       Serial.println(sensorValue2);  // Print the sensor value to the serial monitor
       // delay(4000);  // Wait for half a second before the next reading
       lcd.clear();
@@ -486,11 +532,19 @@ void startIrSensor1() {
       delay(5000);
       
 
-      // Here The code of Molinix
+      // Here The code of Package Motor
       //////////////////////////////////////////////////
-      digitalWrite(dcMotorInterruptPinYellow1, HIGH);
-      digitalWrite(dcMotorInterruptPinYellow2, LOW);
-      analogWrite(dcMotorEnablePinYellow, 170);
+      digitalWrite(in1_4, LOW);
+      digitalWrite(in2_4, HIGH);
+      analogWrite(enA4, 255);
+      delay(147000);
+      digitalWrite(in1_4, HIGH);
+      digitalWrite(in2_4, LOW);
+      analogWrite(enA4, 255);
+      delay(147000);
+      digitalWrite(in1_4, LOW);
+      digitalWrite(in2_4, LOW);
+      analogWrite(enA4, 0);
 
       flagA1++;
       Serial.print("flagA: ");
@@ -498,6 +552,42 @@ void startIrSensor1() {
       Serial.print("flagA1: ");
       Serial.println(flagA1);
       //////////////////////////////////////////////////////
+        } else if (volume == 330){
+          Serial.print("Sensor Value 2 : ");
+      Serial.println(sensorValue2);  // Print the sensor value to the serial monitor
+      // delay(4000);  // Wait for half a second before the next reading
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Cup detected!");
+      digitalWrite(dcMotorInterruptPin1, LOW);
+      digitalWrite(dcMotorInterruptPin2, LOW);
+      analogWrite(dcMotorEnablePin, 0);
+
+      delay(5000);
+      
+
+      // Here The code of Package Motor
+      //////////////////////////////////////////////////
+      digitalWrite(in1_4, LOW);
+      digitalWrite(in2_4, HIGH);
+      analogWrite(enA4, 255);
+      delay(75000);
+      digitalWrite(in1_4, HIGH);
+      digitalWrite(in2_4, LOW);
+      analogWrite(enA4, 255);
+      delay(75000);
+      digitalWrite(in1_4, LOW);
+      digitalWrite(in2_4, LOW);
+      analogWrite(enA4, 0);
+
+      flagA1++;
+      Serial.print("flagA: ");
+      Serial.println(flagA);
+      Serial.print("flagA1: ");
+      Serial.println(flagA1);
+      //////////////////////////////////////////////////////
+        }
+      
       }
       
       if(flagA1 != 0){
