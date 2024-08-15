@@ -3,6 +3,7 @@
 #include <Servo.h>
 
 Servo myservo;  // create servo object to control a servo
+Servo myservo1;  // create servo object to control a servo
 
 // Defines the LCD's parameters: (rs, enable, d4, d5, d6, d7)
 LiquidCrystal lcd(33, 32, 35, 34, 37, 36);
@@ -95,6 +96,9 @@ void setup() {
   Serial.begin(9600);
 
   myservo.attach(3);  // attaches the servo on pin 9 to the servo object
+  myservo1.attach(7);  // attaches the servo on pin 9 to the servo object
+  myservo1.write(30);  // Move the servo to 90 degrees (or any desired position)
+  delay(1000);   
 
   pinMode(flowSensorPin1, INPUT);
   digitalWrite(flowSensorPin1, HIGH);
@@ -440,22 +444,44 @@ void startIrSensor2() {
       // delay(4000);  // Wait for half a second before the next reading
       lcd.clear();
       lcd.setCursor(0, 0);
-      lcd.print("Cup detected!");
+      lcd.print("Stage 3...");
       digitalWrite(dcMotorInterruptPin1, LOW);
       digitalWrite(dcMotorInterruptPin2, LOW);
       analogWrite(dcMotorEnablePin, 0);
 
-      delay(5000);
-
+      delay(2000);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Open Box...");
+      
+      for (int angle = 20; angle <= 90; angle++) {
+        myservo1.write(angle);  // Set the servo to the current angle
+        delay(15);             // Wait for 15 milliseconds to let the servo reach the position
+      }
+      
+      delay(2000);
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Drop Ices...");
       digitalWrite(in1_5, HIGH);
       digitalWrite(in2_5, LOW);
-      analogWrite(enA5, 150);
+      analogWrite(enA5, 24);
 
-      delay(10000);
+      delay(5000);
 
       digitalWrite(in1_5, LOW);
       digitalWrite(in2_5, LOW);
       analogWrite(enA5, 0);
+
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Close Box...");
+      // Sweep from 0 to 180 degrees
+      for (int angle = 90; angle >= 20; angle--) {
+        myservo1.write(angle);  // Set the servo to the current angle
+        delay(15);             // Wait for 15 milliseconds to let the servo reach the position
+      }
+      delay(2000);
 
 
       
@@ -508,9 +534,8 @@ void startIrSensor2() {
 }
 
 void startIrSensor1(unsigned int volume) {
-  lcd.clear();
-  lcd.setCursor(0, 0);
-  lcd.print("Waiting for cup");
+  
+  
   while(true){
   sensorValue2 = digitalRead(irSensorPin1);  // Read the sensor value (HIGH or LOW)
   
@@ -537,11 +562,11 @@ void startIrSensor1(unsigned int volume) {
       digitalWrite(in1_4, LOW);
       digitalWrite(in2_4, HIGH);
       analogWrite(enA4, 255);
-      delay(147000);
+      delay(172000);
       digitalWrite(in1_4, HIGH);
       digitalWrite(in2_4, LOW);
       analogWrite(enA4, 255);
-      delay(147000);
+      delay(172000);
       digitalWrite(in1_4, LOW);
       digitalWrite(in2_4, LOW);
       analogWrite(enA4, 0);
@@ -571,11 +596,11 @@ void startIrSensor1(unsigned int volume) {
       digitalWrite(in1_4, LOW);
       digitalWrite(in2_4, HIGH);
       analogWrite(enA4, 255);
-      delay(75000);
+      delay(80000);
       digitalWrite(in1_4, HIGH);
       digitalWrite(in2_4, LOW);
       analogWrite(enA4, 255);
-      delay(75000);
+      delay(80000);
       digitalWrite(in1_4, LOW);
       digitalWrite(in2_4, LOW);
       analogWrite(enA4, 0);
