@@ -35,6 +35,10 @@ int enA5 = 6;  // Enable pin for motor driver 3 (PWM pin)
 int in1_5 = 44;  // Control pin 1 for motor driver 3
 int in2_5 = 45;  // Control pin 2 for motor driver 3
 
+// For Molinix 
+int enA6 = 3;  // Enable pin for motor driver 3 (PWM pin)
+
+
 // IR sensor setup
 const int irSensorPin = 31;  // IR sensor pin
 const int irSensorPin1 = 41;  // IR sensor pin
@@ -95,7 +99,7 @@ void setup() {
   delay(200);
   Serial.begin(9600);
 
-  myservo.attach(3);  // attaches the servo on pin 9 to the servo object
+  // myservo.attach(3);  // attaches the servo on pin 9 to the servo object
   myservo1.attach(7);  // attaches the servo on pin 9 to the servo object
   myservo1.write(30);  // Move the servo to 90 degrees (or any desired position)
   delay(1000);   
@@ -152,6 +156,9 @@ void setup() {
   digitalWrite(in1_5, LOW);
   digitalWrite(in2_5, LOW);
   analogWrite(enA5, 0);
+
+  pinMode(enA6, OUTPUT);
+
 
   // Initialize additional DC motor off
   pinMode(dcMotorEnablePin, OUTPUT);
@@ -262,13 +269,21 @@ void enterPercentages(unsigned int volume) {
   fillVolume(volume2, "Juice 2", flowSensorPin2, in1_2, in2_2, enA2);
   fillVolume(volume3, "Juice 3", flowSensorPin3, in1_3, in2_3, enA3);
 
+  lcd.clear();
+  lcd.setCursor(0, 0);
+  lcd.print("Juice Filled !!");
+
+  delay(2000);
+
+  
+
   digitalWrite(dcMotorInterruptPin1, LOW);
   digitalWrite(dcMotorInterruptPin2, LOW);
   analogWrite(dcMotorEnablePin, 0);
 
 
   // Start IR sensor detection after filling the last juice
-  startIrSensor();
+  startIrSensor(volume);
   startIrSensor2();
   startIrSensor1(volume);
   
@@ -323,7 +338,7 @@ void fillVolume(unsigned int volume, const char* juiceType, int flowSensorPin, i
         flow_frequency++;
       }
       
-      l_hour = 40; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
+      l_hour = 53; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
       totalMilliLitres += (l_hour * 1000 / 3600); // Convert liters/hour to milliliters/second
 
       // Update and display current milliliters on LCD
@@ -352,7 +367,7 @@ void fillVolume(unsigned int volume, const char* juiceType, int flowSensorPin, i
 }
 
 
-void startIrSensor() {
+void startIrSensor(unsigned int volume) {
   lcd.clear();
   lcd.setCursor(0, 0);
   lcd.print("Waiting for cup");
@@ -363,7 +378,73 @@ void startIrSensor() {
       flag++;
       
       if(flag1 == 0){
-      Serial.print("Sensor Value: ");
+        if(volume == 250){
+          Serial.print("Sensor Value: ");
+      Serial.println(sensorValue1);  // Print the sensor value to the serial monitor
+      // delay(4000);  // Wait for half a second before the next reading
+      lcd.clear();
+      lcd.setCursor(0, 0);
+      lcd.print("Cup detected!");
+      digitalWrite(dcMotorInterruptPin1, LOW);
+      digitalWrite(dcMotorInterruptPin2, LOW);
+      analogWrite(dcMotorEnablePin, 0);
+
+      // lcd.clear();
+      // lcd.setCursor(0, 0);
+      // lcd.print("Go Down!!");
+      delay(5000);
+      
+
+      // Here The code of Molinix
+      //////////////////////////////////////////////////
+      digitalWrite(dcMotorInterruptPinYellow1, LOW);
+      digitalWrite(dcMotorInterruptPinYellow2, HIGH);
+      analogWrite(dcMotorEnablePinYellow, 255);
+
+      delay(19000);
+      
+      digitalWrite(dcMotorInterruptPinYellow1, LOW);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 0);
+      
+      // Here is Mix Juice
+      // lcd.clear();
+      // lcd.setCursor(0, 0);
+      // lcd.print("Mix Juice!!");
+      // delay(3000);
+      digitalWrite(enA6, HIGH);   // turn the RELAY on 
+      delay(10000);                     // wait for a second
+      digitalWrite(enA6, LOW);    // turn the RELAY off
+      // lcd.clear();
+      // lcd.setCursor(0, 0);
+      // lcd.print("Juice Mixed!!");
+      delay(5000);
+
+      digitalWrite(dcMotorInterruptPinYellow1, HIGH);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 255);
+      // lcd.clear();
+      // lcd.setCursor(0, 0);
+      // lcd.print("GO UP!!");
+
+      delay(20000);
+      digitalWrite(dcMotorInterruptPinYellow1, LOW);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 0);
+
+
+
+
+
+
+      flag1++;
+      Serial.print("flag: ");
+      Serial.println(flag);
+      Serial.print("flag1: ");
+      Serial.println(flag1);
+      //////////////////////////////////////////////////////
+        } else if (volume == 330){
+          Serial.print("Sensor Value: ");
       Serial.println(sensorValue1);  // Print the sensor value to the serial monitor
       // delay(4000);  // Wait for half a second before the next reading
       lcd.clear();
@@ -378,14 +459,33 @@ void startIrSensor() {
 
       // Here The code of Molinix
       //////////////////////////////////////////////////
-      digitalWrite(dcMotorInterruptPinYellow1, HIGH);
-      digitalWrite(dcMotorInterruptPinYellow2, LOW);
-      analogWrite(dcMotorEnablePinYellow, 170);
+      digitalWrite(dcMotorInterruptPinYellow1, LOW);
+      digitalWrite(dcMotorInterruptPinYellow2, HIGH);
+      analogWrite(dcMotorEnablePinYellow, 255);
 
-      delay(5000);
+      delay(15000);
       digitalWrite(dcMotorInterruptPinYellow1, LOW);
       digitalWrite(dcMotorInterruptPinYellow2, LOW);
       analogWrite(dcMotorEnablePinYellow, 0);
+      // Here is Mix Juice
+      digitalWrite(enA6, HIGH);   // turn the RELAY on 
+      delay(10000);                     // wait for a second
+      digitalWrite(enA6, LOW);    // turn the RELAY off
+      delay(5000);
+
+      digitalWrite(dcMotorInterruptPinYellow1, HIGH);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 255);
+
+      delay(15000);
+      digitalWrite(dcMotorInterruptPinYellow1, LOW);
+      digitalWrite(dcMotorInterruptPinYellow2, LOW);
+      analogWrite(dcMotorEnablePinYellow, 0);
+
+
+
+
+
 
       flag1++;
       Serial.print("flag: ");
@@ -393,6 +493,8 @@ void startIrSensor() {
       Serial.print("flag1: ");
       Serial.println(flag1);
       //////////////////////////////////////////////////////
+        }
+      
       }
       
       if(flag1 != 0){
@@ -465,7 +567,7 @@ void startIrSensor2() {
       lcd.print("Drop Ices...");
       digitalWrite(in1_5, HIGH);
       digitalWrite(in2_5, LOW);
-      analogWrite(enA5, 24);
+      analogWrite(enA5, 150);
 
       delay(5000);
 
