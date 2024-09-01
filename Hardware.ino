@@ -338,7 +338,7 @@ void fillVolume(unsigned int volume, const char* juiceType, int flowSensorPin, i
         flow_frequency++;
       }
       
-      l_hour = 53; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
+      l_hour = 51; // (Pulse frequency x 60) / 7.5Q, Q = 7.5 (for YF-S201)
       totalMilliLitres += (l_hour * 1000 / 3600); // Convert liters/hour to milliliters/second
 
       // Update and display current milliliters on LCD
@@ -392,7 +392,7 @@ void startIrSensor(unsigned int volume) {
       // lcd.clear();
       // lcd.setCursor(0, 0);
       // lcd.print("Go Down!!");
-      delay(5000);
+      // delay(5000);
       
 
       // Here The code of Molinix
@@ -413,16 +413,17 @@ void startIrSensor(unsigned int volume) {
       // lcd.print("Mix Juice!!");
       // delay(3000);
       digitalWrite(enA6, HIGH);   // turn the RELAY on 
-      delay(10000);                     // wait for a second
+      delay(6000);                     // wait for a second
       digitalWrite(enA6, LOW);    // turn the RELAY off
       // lcd.clear();
-      // lcd.setCursor(0, 0);
+      // lcd.setCursor(0, 0); 
       // lcd.print("Juice Mixed!!");
-      delay(5000);
+      delay(2000);
 
       digitalWrite(dcMotorInterruptPinYellow1, HIGH);
       digitalWrite(dcMotorInterruptPinYellow2, LOW);
       analogWrite(dcMotorEnablePinYellow, 255);
+
       // lcd.clear();
       // lcd.setCursor(0, 0);
       // lcd.print("GO UP!!");
@@ -431,11 +432,6 @@ void startIrSensor(unsigned int volume) {
       digitalWrite(dcMotorInterruptPinYellow1, LOW);
       digitalWrite(dcMotorInterruptPinYellow2, LOW);
       analogWrite(dcMotorEnablePinYellow, 0);
-
-
-
-
-
 
       flag1++;
       Serial.print("flag: ");
@@ -463,13 +459,13 @@ void startIrSensor(unsigned int volume) {
       digitalWrite(dcMotorInterruptPinYellow2, HIGH);
       analogWrite(dcMotorEnablePinYellow, 255);
 
-      delay(15000);
+      delay(14000);
       digitalWrite(dcMotorInterruptPinYellow1, LOW);
       digitalWrite(dcMotorInterruptPinYellow2, LOW);
       analogWrite(dcMotorEnablePinYellow, 0);
       // Here is Mix Juice
       digitalWrite(enA6, HIGH);   // turn the RELAY on 
-      delay(10000);                     // wait for a second
+      delay(6000);                     // wait for a second
       digitalWrite(enA6, LOW);    // turn the RELAY off
       delay(5000);
 
@@ -698,11 +694,11 @@ void startIrSensor1(unsigned int volume) {
       digitalWrite(in1_4, LOW);
       digitalWrite(in2_4, HIGH);
       analogWrite(enA4, 255);
-      delay(80000);
+      delay(82000);
       digitalWrite(in1_4, HIGH);
       digitalWrite(in2_4, LOW);
       analogWrite(enA4, 255);
-      delay(80000);
+      delay(82000);
       digitalWrite(in1_4, LOW);
       digitalWrite(in2_4, LOW);
       analogWrite(enA4, 0);
